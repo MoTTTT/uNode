@@ -1,0 +1,473 @@
+C51 COMPILER V3.40,  TEST                                                                  08/06/97  01:19:50  PAGE 1   
+
+
+DOS C51 COMPILER V3.40, COMPILATION OF MODULE TEST
+OBJECT MODULE PLACED IN TEST.OBJ
+COMPILER INVOKED BY: D:\C51\BIN\C51.EXE TEST.C CODE SYMBOLS DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          /*			Copyright Q Solutions				*/
+   2          /*	File:		test.c						*/
+   3          /*	Programmer:	MoT						*/
+   4          /*	Module:		Library routine test program			*/
+   5          /*									*/
+   6          /*			History						*/
+   7          /* 05:19am 06-07-1997  	Written from scratch				*/
+   8          /*									*/
+   9          
+  10          #pragma		ROM (COMPACT)
+  11          #pragma		LARGE
+  12          
+  13          /* Library files							*/
+  14          #include	<stdio.h>
+  15          #include	<reg552.h>
+  16          
+  17          typedef	unsigned int uint;		/* Optimise for size & speed:	*/
+  18          typedef	unsigned char byte;		/* Use unsigned char and int	*/
+  19          
+  20          #include	<nodelcd.h>		/* Local LCD module routines	*/
+  21          #include	<nkey.h>		/* Local Keypad module routines	*/
+  22          #include	<wdog.h>		/* Watchdog refresh routine	*/
+  23          #include	<serial.h>		/* Serial port routines		*/
+  24          
+  25          #define		IO_NLCD	1		/* Output to uNode LCD		*/
+  26          #define		IO_SER	2		/* Output to Serial Port	*/
+  27          #define		B19200	0xFD		/* Serial Port Baud rate	*/
+  28          #define		B4800	0xFA		/* Serial Port Baud rate	*/
+  29          
+  30          const char *signon1= "    Magellan    ";/* Line 1 of sign on screen	*/
+  31          const char *signon2= "    Simulator   ";/* Line 2 of signon screen	*/
+  32          
+  33          char	out_stream;			/* Output port			*/
+  34          uint	counter;			/* Routine cycle counter	*/
+  35          char	cnt;
+  36          
+  37          void	signon		( )		/* Splash Screen		*/
+  38          {
+  39   1      	out_stream= IO_NLCD;		/* Output port: LCD		*/
+  40   1      	paint_nlcd ( signon1, signon2 );
+  41   1      	out_stream= IO_SER;		/* Output port: Serial		*/
+  42   1      	printf	( "Magellan GPS 3000 Simulator.\n" );
+  43   1      	printf	( "Sending GGA Frames...\n" );
+  44   1      }
+  45          
+  46          void	initialise	( )		/* Initialise Hardware		*/
+  47          {
+  48   1      	EA=		1;		/* Enable Global Interrupt	*/
+  49   1      	init_nlcd	( );		/* Initialise local LCD		*/
+  50   1      	init_nkey	( );		/* Initialise local keypad	*/
+  51   1      	init_serial	( B4800 );	/* Initialise Serial Port	*/
+  52   1      	signon		( );		/* Splash screen		*/
+  53   1      }
+  54          
+  55          char	putchar		( char out )
+  56          {
+  57   1      char	result;
+  58   1      	switch	( out_stream )
+  59   1      	{
+C51 COMPILER V3.40,  TEST                                                                  08/06/97  01:19:50  PAGE 2   
+
+  60   2      	case IO_NLCD:			/* Write to local LCD		*/
+  61   2      		result= nputchar ( out );
+  62   2      		break;
+  63   2      	case IO_SER:			/* Write to serial Port		*/
+  64   2      		result= sputchar ( out );
+  65   2      		break;
+  66   2      	default:
+  67   2      		return	( -1 );
+  68   2      	}
+  69   1      	return	( result );
+  70   1      }
+  71          
+  72          void	send_GGA	( void )
+  73          {
+  74   1      	printf	( "$GPGGA,hhmmss.ss,111.11,a," );
+  75   1      	printf	( "yyyyy.yy,a,x,xx,x.x,x.x," );
+  76   1      	printf	( "M,x.x,M,x.x,xxxx*hh\n" );
+  77   1      }
+  78          
+  79          void	service_keypad	( )		/* Read and process keypad	*/
+  80          {
+  81   1      byte	in;
+  82   1      	if	( x1_flag )
+  83   1      	{
+  84   2      		in= ngetkey	( );
+  85   2      		switch	( in )
+  86   2      		{
+  87   3      		case 0:	putchar (0x0A);
+  88   3      			break;
+  89   3      		default:send_GGA( );
+  90   3      			break;
+  91   3      		}
+  92   2      	}
+  93   1      }
+  94          
+  95          void	main	( void )		/* Main Loop			*/
+  96          {
+  97   1      int	i;
+  98   1      	initialise	( );		/* Set up drivers, sign on	*/
+  99   1      	while	( 1 )
+ 100   1      	{
+ 101   2      		wdog	( 10 );		/* Refresh watchdog		*/
+ 102   2      		service_keypad	( );	/* Process input		*/
+ 103   2      		send_GGA( );
+ 104   2      		while	( s_run );
+ 105   2      		counter++;		/* Increment loop counter	*/
+ 106   2      	}
+ 107   1      }
+C51 COMPILER V3.40,  TEST                                                                  08/06/97  01:19:50  PAGE 3   
+
+ASSEMBLY LISTING OF GENERATED OBJECT CODE
+
+
+             ; FUNCTION signon (BEGIN)
+                                           ; SOURCE LINE # 37
+                                           ; SOURCE LINE # 38
+                                           ; SOURCE LINE # 39
+0000 900000  R     MOV     DPTR,#out_stream
+0003 7401          MOV     A,#01H
+0005 F0            MOVX    @DPTR,A
+                                           ; SOURCE LINE # 40
+0006 900000  R     MOV     DPTR,#signon2
+0009 E0            MOVX    A,@DPTR
+000A F9            MOV     R1,A
+000B A3            INC     DPTR
+000C E0            MOVX    A,@DPTR
+000D FA            MOV     R2,A
+000E A3            INC     DPTR
+000F E0            MOVX    A,@DPTR
+0010 900000  E     MOV     DPTR,#?_paint_nlcd?BYTE+03H
+0013 C9            XCH     A,R1
+0014 F0            MOVX    @DPTR,A
+0015 A3            INC     DPTR
+0016 EA            MOV     A,R2
+0017 F0            MOVX    @DPTR,A
+0018 A3            INC     DPTR
+0019 E9            MOV     A,R1
+001A F0            MOVX    @DPTR,A
+001B 900000  R     MOV     DPTR,#signon1
+001E E0            MOVX    A,@DPTR
+001F FB            MOV     R3,A
+0020 A3            INC     DPTR
+0021 E0            MOVX    A,@DPTR
+0022 FA            MOV     R2,A
+0023 A3            INC     DPTR
+0024 E0            MOVX    A,@DPTR
+0025 F9            MOV     R1,A
+0026 120000  E     LCALL   _paint_nlcd
+                                           ; SOURCE LINE # 41
+0029 900000  R     MOV     DPTR,#out_stream
+002C 7402          MOV     A,#02H
+002E F0            MOVX    @DPTR,A
+                                           ; SOURCE LINE # 42
+002F 7B05          MOV     R3,#05H
+0031 7A00    R     MOV     R2,#HIGH ?SC_34
+0033 7900    R     MOV     R1,#LOW ?SC_34
+0035 120000  E     LCALL   _printf
+                                           ; SOURCE LINE # 43
+0038 7B05          MOV     R3,#05H
+003A 7A00    R     MOV     R2,#HIGH ?SC_64
+003C 7900    R     MOV     R1,#LOW ?SC_64
+003E 120000  E     LCALL   _printf
+                                           ; SOURCE LINE # 44
+0041 22            RET     
+             ; FUNCTION signon (END)
+
+             ; FUNCTION initialise (BEGIN)
+                                           ; SOURCE LINE # 46
+                                           ; SOURCE LINE # 47
+                                           ; SOURCE LINE # 48
+0000 D2AF          SETB    EA
+                                           ; SOURCE LINE # 49
+0002 120000  E     LCALL   init_nlcd
+                                           ; SOURCE LINE # 50
+0005 120000  E     LCALL   init_nkey
+                                           ; SOURCE LINE # 51
+C51 COMPILER V3.40,  TEST                                                                  08/06/97  01:19:50  PAGE 4   
+
+0008 7FFA          MOV     R7,#0FAH
+000A 120000  E     LCALL   _init_serial
+                                           ; SOURCE LINE # 52
+000D 120000  R     LCALL   signon
+                                           ; SOURCE LINE # 53
+0010 22            RET     
+             ; FUNCTION initialise (END)
+
+             ; FUNCTION _putchar (BEGIN)
+0000 900000  R     MOV     DPTR,#out
+0003 EF            MOV     A,R7
+0004 F0            MOVX    @DPTR,A
+                                           ; SOURCE LINE # 55
+                                           ; SOURCE LINE # 56
+                                           ; SOURCE LINE # 58
+0005 900000  R     MOV     DPTR,#out_stream
+0008 E0            MOVX    A,@DPTR
+0009 24FE          ADD     A,#0FEH
+000B 6012          JZ      ?C0005
+000D 04            INC     A
+000E 701E          JNZ     ?C0006
+                                           ; SOURCE LINE # 59
+                                           ; SOURCE LINE # 60
+0010         ?C0004:
+                                           ; SOURCE LINE # 61
+0010 900000  R     MOV     DPTR,#out
+0013 E0            MOVX    A,@DPTR
+0014 FF            MOV     R7,A
+0015 120000  E     LCALL   _nputchar
+0018 900000  R     MOV     DPTR,#result
+001B EF            MOV     A,R7
+001C F0            MOVX    @DPTR,A
+                                           ; SOURCE LINE # 62
+001D 8012          SJMP    ?C0003
+                                           ; SOURCE LINE # 63
+001F         ?C0005:
+                                           ; SOURCE LINE # 64
+001F 900000  R     MOV     DPTR,#out
+0022 E0            MOVX    A,@DPTR
+0023 FF            MOV     R7,A
+0024 120000  E     LCALL   _sputchar
+0027 900000  R     MOV     DPTR,#result
+002A EF            MOV     A,R7
+002B F0            MOVX    @DPTR,A
+                                           ; SOURCE LINE # 65
+002C 8003          SJMP    ?C0003
+                                           ; SOURCE LINE # 66
+002E         ?C0006:
+                                           ; SOURCE LINE # 67
+002E 7FFF          MOV     R7,#0FFH
+0030 22            RET     
+                                           ; SOURCE LINE # 68
+0031         ?C0003:
+                                           ; SOURCE LINE # 69
+0031 900000  R     MOV     DPTR,#result
+0034 E0            MOVX    A,@DPTR
+0035 FF            MOV     R7,A
+                                           ; SOURCE LINE # 70
+0036         ?C0007:
+0036 22            RET     
+             ; FUNCTION _putchar (END)
+
+             ; FUNCTION send_GGA (BEGIN)
+                                           ; SOURCE LINE # 72
+                                           ; SOURCE LINE # 73
+                                           ; SOURCE LINE # 74
+C51 COMPILER V3.40,  TEST                                                                  08/06/97  01:19:50  PAGE 5   
+
+0000 7B05          MOV     R3,#05H
+0002 7A00    R     MOV     R2,#HIGH ?SC_87
+0004 7900    R     MOV     R1,#LOW ?SC_87
+0006 120000  E     LCALL   _printf
+                                           ; SOURCE LINE # 75
+0009 7B05          MOV     R3,#05H
+000B 7A00    R     MOV     R2,#HIGH ?SC_114
+000D 7900    R     MOV     R1,#LOW ?SC_114
+000F 120000  E     LCALL   _printf
+                                           ; SOURCE LINE # 76
+0012 7B05          MOV     R3,#05H
+0014 7A00    R     MOV     R2,#HIGH ?SC_139
+0016 7900    R     MOV     R1,#LOW ?SC_139
+0018 120000  E     LCALL   _printf
+                                           ; SOURCE LINE # 77
+001B 22            RET     
+             ; FUNCTION send_GGA (END)
+
+             ; FUNCTION service_keypad (BEGIN)
+                                           ; SOURCE LINE # 79
+                                           ; SOURCE LINE # 80
+                                           ; SOURCE LINE # 82
+0000 30000F  E     JNB     x1_flag,?C0013
+                                           ; SOURCE LINE # 83
+                                           ; SOURCE LINE # 84
+0003 120000  E     LCALL   ngetkey
+;---- Variable 'in' assigned to Register 'R7' ----
+                                           ; SOURCE LINE # 85
+0006 EF            MOV     A,R7
+0007 7006          JNZ     ?C0012
+                                           ; SOURCE LINE # 86
+                                           ; SOURCE LINE # 87
+0009         ?C0011:
+0009 7F0A          MOV     R7,#0AH
+000B 120000  R     LCALL   _putchar
+                                           ; SOURCE LINE # 88
+000E 22            RET     
+                                           ; SOURCE LINE # 89
+000F         ?C0012:
+000F 120000  R     LCALL   send_GGA
+                                           ; SOURCE LINE # 90
+                                           ; SOURCE LINE # 91
+                                           ; SOURCE LINE # 92
+                                           ; SOURCE LINE # 93
+0012         ?C0013:
+0012 22            RET     
+             ; FUNCTION service_keypad (END)
+
+             ; FUNCTION main (BEGIN)
+                                           ; SOURCE LINE # 95
+                                           ; SOURCE LINE # 96
+                                           ; SOURCE LINE # 98
+0000 120000  R     LCALL   initialise
+0003         ?C0014:
+                                           ; SOURCE LINE # 99
+                                           ; SOURCE LINE # 100
+                                           ; SOURCE LINE # 101
+0003 7F0A          MOV     R7,#0AH
+0005 120000  E     LCALL   _wdog
+                                           ; SOURCE LINE # 102
+0008 120000  R     LCALL   service_keypad
+                                           ; SOURCE LINE # 103
+000B 120000  R     LCALL   send_GGA
+000E         ?C0016:
+                                           ; SOURCE LINE # 104
+000E 2000FD  E     JB      s_run,?C0016
+C51 COMPILER V3.40,  TEST                                                                  08/06/97  01:19:50  PAGE 6   
+
+0011         ?C0017:
+                                           ; SOURCE LINE # 105
+0011 900000  R     MOV     DPTR,#counter+01H
+0014 E0            MOVX    A,@DPTR
+0015 04            INC     A
+0016 F0            MOVX    @DPTR,A
+0017 7006          JNZ     ?C0019
+0019 900000  R     MOV     DPTR,#counter
+001C E0            MOVX    A,@DPTR
+001D 04            INC     A
+001E F0            MOVX    @DPTR,A
+001F         ?C0019:
+                                           ; SOURCE LINE # 106
+001F 80E2          SJMP    ?C0014
+                                           ; SOURCE LINE # 107
+0021 22            RET     
+             ; FUNCTION main (END)
+
+C51 COMPILER V3.40,  TEST                                                                  08/06/97  01:19:50  PAGE 7   
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+AA . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00DAH  1
+_paint_nlcd. . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+T0 . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B4H  1
+AC . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D6H  1
+counter. . . . . . . . . . . . . . . .  PUBLIC   XDATA  U_INT    0000H  2
+T1 . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B5H  1
+ECM0 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00ECH  1
+EA . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00AFH  1
+ECM1 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00EDH  1
+ECM2 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00EEH  1
+CMI0 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00CCH  1
+CMI1 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00CDH  1
+CMI2 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00CEH  1
+T20V . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00CFH  1
+ECT0 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00E8H  1
+ECT1 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00E9H  1
+ECT2 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00EAH  1
+ECT3 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00EBH  1
+CTI0 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00C8H  1
+PCM0 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FCH  1
+signon . . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     -----  -----
+CTI1 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00C9H  1
+PCM1 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FDH  1
+_wdog. . . . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+CTI2 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00CAH  1
+PCM2 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FEH  1
+CTI3 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00CBH  1
+RD . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B7H  1
+ENS1 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00DEH  1
+PCT0 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00F8H  1
+PCT1 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00F9H  1
+PCT2 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FAH  1
+RI . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0098H  1
+PCT3 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FBH  1
+SI . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00DBH  1
+INT0 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B2H  1
+CY . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D7H  1
+TI . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0099H  1
+INT1 . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B3H  1
+OV . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D2H  1
+x1_flag. . . . . . . . . . . . . . . .  EXTERN   DATA   BIT      -----  1
+main . . . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     -----  -----
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  INT      0000H  2
+WR . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B6H  1
+s_run. . . . . . . . . . . . . . . . .  EXTERN   DATA   BIT      -----  1
+initialise . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     -----  -----
+byte . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
+init_nlcd. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+IE0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0089H  1
+IE1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      008BH  1
+uint . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+signon1. . . . . . . . . . . . . . . .  PUBLIC   XDATA  PTR      0002H  3
+signon2. . . . . . . . . . . . . . . .  PUBLIC   XDATA  PTR      0005H  3
+CR0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D8H  1
+cnt. . . . . . . . . . . . . . . . . .  PUBLIC   XDATA  CHAR     0008H  1
+CR1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D9H  1
+ES0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00ACH  1
+ET0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00A9H  1
+ES1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00ADH  1
+out_stream . . . . . . . . . . . . . .  PUBLIC   XDATA  CHAR     0009H  1
+_nputchar. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+C51 COMPILER V3.40,  TEST                                                                  08/06/97  01:19:50  PAGE 8   
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+ET1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00ABH  1
+EAD. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00AEH  1
+TF0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      008DH  1
+ET2. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00EFH  1
+TF1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      008FH  1
+RB8. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      009AH  1
+EX0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00A8H  1
+IT0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0088H  1
+TB8. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      009BH  1
+EX1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00AAH  1
+IT1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      008AH  1
+_sputchar. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+P. . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D0H  1
+init_nkey. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+SM0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      009FH  1
+SM1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      009EH  1
+SM2. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      009DH  1
+PS0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00BCH  1
+PT0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B9H  1
+PS1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00BDH  1
+PT1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00BBH  1
+PAD. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00BEH  1
+RS0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D3H  1
+PT2. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FFH  1
+TR0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      008CH  1
+RS1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D4H  1
+TR1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      008EH  1
+service_keypad . . . . . . . . . . . .  PUBLIC   CODE   PROC     -----  -----
+  in . . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+PX0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B8H  1
+PX1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00BAH  1
+_putchar . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     -----  -----
+  out. . . . . . . . . . . . . . . . .  AUTO     XDATA  CHAR     0000H  1
+  result . . . . . . . . . . . . . . .  AUTO     XDATA  CHAR     0001H  1
+send_GGA . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     -----  -----
+REN. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      009CH  1
+STA. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00DDH  1
+RXD. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B0H  1
+TXD. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B1H  1
+F0 . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00D5H  1
+STO. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00DCH  1
+_printf. . . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+_init_serial . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+ngetkey. . . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    219    ----
+   CONSTANT SIZE    =    160    ----
+   XDATA SIZE       =     10       4
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

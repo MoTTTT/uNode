@@ -1,0 +1,133 @@
+
+
+
+ADJTIMEX(2)         Linux Programmer's Manual         ADJTIMEX(2)
+
+
+NNAAMMEE
+       adjtimex - tune kernel clock
+
+SSYYNNOOPPSSIISS
+       ##iinncclluuddee <<ssyyss//ttiimmeexx..hh>>
+
+       iinntt aaddjjttiimmeexx((ssttrruucctt ttiimmeexx **_b_u_f));;
+
+DDEESSCCRRIIPPTTIIOONN
+       Linux  uses David Mill's clock adjustment algorithm.  aaddjj--
+       ttiimmeexx reads and optionally sets adjustment parameters  for
+       this algorithm.
+
+       aaddjjttiimmeexx  takes  a  pointer  to a _t_i_m_e_x structure, updates
+       kernel parameters from field values, and returns the  same
+       structure  with  current kernel values.  This structure is
+       declared as follows:
+
+              struct timex
+              {
+                  int mode;            /* mode selector */
+                  long offset;         /* time offset (usec) */
+                  long frequency;      /* frequency offset (scaled ppm) */
+                  long maxerror;       /* maximum error (usec) */
+                  long esterror;       /* estimated error (usec) */
+                  int status;          /* clock command/status */
+                  long time_constant;  /* pll time constant */
+                  long precision;      /* clock precision (usec) (read only) */
+                  long tolerance;      /* clock frequency tolerance (ppm)
+                                          (read only) */
+                  struct timeval time; /* (read only) */
+                  long tick;           /* usecs between clock ticks */
+              };
+
+       The _m_o_d_e field determines which  parameters,  if  any,  to
+       set.   It  may contain a bitwise-_o_r combination of zero or
+       more of the following bits:
+
+              #define ADJ_OFFSET            0x0001 /* time offset */
+              #define ADJ_FREQUENCY         0x0002 /* frequency offset */
+              #define ADJ_MAXERROR          0x0004 /* maximum time error */
+              #define ADJ_ESTERROR          0x0008 /* estimated time error */
+              #define ADJ_STATUS            0x0010 /* clock status */
+              #define ADJ_TIMECONST         0x0020 /* pll time constant */
+              #define ADJ_TICK              0x4000 /* tick value */
+              #define ADJ_OFFSET_SINGLESHOT 0x8001 /* old-fashioned adjtime */
+
+       Ordinary users are restricted to a zero  value  for  _m_o_d_e.
+       Only the superuser may set any parameters.
+
+
+
+
+
+
+
+
+Linux 1.2.4               15 April 1995                         1
+
+
+
+
+
+ADJTIMEX(2)         Linux Programmer's Manual         ADJTIMEX(2)
+
+
+RREETTUURRNN VVAALLUUEE
+       On success, aaddjjttiimmeexx returns the value of _b_u_f_._s_t_a_t_u_s:
+
+              #define TIME_OK  0 /* clock synchronized */
+              #define TIME_INS 1 /* insert leap second */
+              #define TIME_DEL 2 /* delete leap second */
+              #define TIME_OOP 3 /* leap second in progress */
+              #define TIME_BAD 4 /* clock not synchronized */
+
+       On failure, aaddjjttiimmeexx returns -1 and sets _e_r_r_n_o.
+
+EERRRROORRSS
+       EEFFAAUULLTT _b_u_f does not point to writeable memory.
+
+       EEPPEERRMM  _b_u_f_._m_o_d_e  is  non-zero  and  the user is not super-
+              user.
+
+       EEIINNVVAALL An attempt is made to set  _b_u_f_._o_f_f_s_e_t  to  a  value
+              outside  the  range  -131071  to +131071, or to set
+              _b_u_f_._s_t_a_t_u_s to  a  value  other  than  those  listed
+              above,  or  to  set _b_u_f_._t_i_c_k to a value outside the
+              range 900000/HHZZ to 1100000/HHZZ, where HHZZ is the sys-
+              tem timer interrupt frequency.
+
+SSEEEE AALLSSOO
+       sseettttiimmeeooffddaayy(2).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Linux 1.2.4               15 April 1995                         2
+
+
+[25;1H[K

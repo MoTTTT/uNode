@@ -1,0 +1,19 @@
+MODULE	N552
+
+MEMEDEC DEVICE	'P16V8AS';
+
+NPS, NRD, NWR, A12, A13, A14, A15, GI0, GI1, GI2 PIN 1,2,3,4,5,6,7,8,9,11;
+NSO, NEO, NS1, NS2, NSA, NEA, NWA, NEK PIN 12, 13, 14, 15, 16, 17, 18, 19;
+
+EQUATIONS
+
+       !NSO  = !A14 & !A15 &  GI2;
+       !NEO  = !NPS &  GI2;
+       NS1  =  A15 & !A14 & !A13 &  A12 & (!NRD # !NWR); 
+       !NS2  =	A15 & !A14 &  A13 & !A12;
+       !NSA  = !A15;
+       !NEA  =(!NRD & !A15 &  GI2)#(!A15 & !A14 & !NPS & !GI2);
+       !NWA  =(!NWR & !A15 &  GI2)#(!NWR &  A14 & !A15 & !GI2);
+       !NEK  =	A15 & !A14 & !A13 & !A12;
+								
+END

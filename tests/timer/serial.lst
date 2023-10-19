@@ -1,0 +1,190 @@
+C51 COMPILER V3.40,  SERIAL                                                                12/06/98  13:30:01  PAGE 1   
+
+
+DOS C51 COMPILER V3.40, COMPILATION OF MODULE SERIAL
+OBJECT MODULE PLACED IN SERIAL.OBJ
+COMPILER INVOKED BY: C:\C51\BIN\C51.EXE SERIAL.C LA
+
+stmt level    source
+
+   1          From - Mon May 19 23:46:47 1997
+*** ERROR 129 IN LINE 1 OF SERIAL.C: missing ';' before '-'
+   2          Return-Path: <colleymj@telkom.co.za>
+   3          Received: from qit-ul-0102.telkom.co.za ([165.143.240.133])
+   4                    by cheetah.intekom.co.za (Netscape Mail Server v2.02) with SMTP
+   5                    id AAA18968 for <qsolution@intekom.co.za>;
+   6                    Mon, 19 May 1997 15:54:09 +0200
+   7          Received: from wbif-colley.telkom.co.za (wbif-colley.telkom.co.za [165.148.12.73]) by qit-ul-0102.telkom.c
+             -o.za (8.6.11/1997042006) with ESMTP id PAA23489 for <qsolution@intekom.co.za>; Mon, 19 May 1997 15:50:54 +0200
+   8          Message-ID: <33805A64.9B1A9BBC@telkom.co.za>
+   9          Date: Mon, 19 May 1997 15:49:26 +0200
+  10          From: Martin Colley <colleymj@telkom.co.za>
+  11          X-Mailer: Mozilla 4.0b4 [en] (Win95; I)
+  12          MIME-Version: 1.0
+  13          To: qsolution@intekom.co.za
+  14          Subject: [Fwd: I need some solid 'C' routines to read from a serial port in 'LINUX']
+  15          X-Priority: 3 (Normal)
+  16          Content-Type: multipart/mixed; boundary="------------CE68AB55E2DE5E554007DFBB"
+  17          X-Mozilla-Status: 0001
+  18          Content-Length: 6087
+  19          
+  20          This is a multi-part message in MIME format.
+  21          --------------CE68AB55E2DE5E554007DFBB
+  22          Content-Type: text/plain; charset=us-ascii
+  23          Content-Transfer-Encoding: 7bit
+  24          
+  25          Mark Hahn wrote:
+  26          
+  27          > : >I need some 'c' routines that can read the serial port on a LINUX
+  28          > : >box.  It will be running either Slackware Linux 2.3 or Red Hat 4.1.
+  29          >
+  30          > : >Let me know the most common and most reliable methods.
+  31          >
+  32          > read/write is the only way to do IO on serial ports, and it's
+*** ERROR 305 IN LINE 32 OF SERIAL.C: unterminated string/char const
+  33          > completely reliable.  it can be layered under buffered stdio
+  34          > if you like, but that sometimes complicates things.
+  35          >
+  36          > : FILE *serial=fopen("/dev/ttya","r+");
+  37          > : getchar(serial);
+  38          >
+  39          > indeed.  here's a bit more useful example, a fully-functional program
+*** ERROR 305 IN LINE 39 OF SERIAL.C: unterminated string/char const
+  40          > I use to talk to my modem when I don't want to bother cranking up
+*** ERROR 305 IN LINE 40 OF SERIAL.C: unterminated string/char const
+  41          > pppd:
+  42          >
+  43          > #include <unistd.h>
+  44          > #include <sys/time.h>
+  45          > #include <fcntl.h>
+  46          > #include <stdio.h>
+  47          > #include <termios.h>
+  48          >
+  49          > int main() {
+  50          >     int fdSer;
+  51          >     int fdCon;
+  52          >     struct termios t, tOrg;
+  53          >
+  54          >     fclose(stdin);
+C51 COMPILER V3.40,  SERIAL                                                                12/06/98  13:30:01  PAGE 2   
+
+  55          >     fclose(stdout);
+  56          >
+  57          >     if ((fdSer = open("/dev/modem", O_RDWR )) < 0) {
+  58          >         perror("open of /dev/modem failed");
+  59          >         return -1;
+  60          >     }
+  61          >     if ((fdCon = open("/dev/tty", O_RDWR )) < 0) {
+  62          >         perror("open of /dev/tty failed");
+  63          >         return -1;
+  64          >     }
+  65          >
+  66          >     t.c_iflag = IGNBRK | INPCK;
+  67          >     t.c_oflag = 0;
+  68          >     t.c_cflag = CS8 | CREAD | CLOCAL | CSTOPB;
+  69          >     t.c_lflag = 0;
+  70          >     cfsetispeed(&t,B38400);
+  71          >     cfsetospeed(&t,B38400);
+  72          >     tcsetattr(fdSer,TCSANOW,&t);
+  73          >
+  74          >     tcgetattr(fdCon,&tOrg);
+  75          >     t = tOrg;
+  76          >     t.c_iflag = 0;
+  77          >     t.c_lflag = 0;
+  78          >     t.c_cc[VTIME] = t.c_cc[VMIN] = 0;
+  79          >     tcsetattr(fdCon,TCSANOW,&t);
+  80          >
+  81          >     while (1) {
+  82          >         struct timeval timeout;
+  83          >         fd_set readset;
+  84          >         unsigned char buf[256];
+  85          >         int c;
+  86          >
+  87          >         timeout.tv_sec = 10;
+  88          >         timeout.tv_usec = 0;
+  89          >
+  90          >         FD_ZERO(&readset);
+  91          >         FD_SET(fdCon,&readset);
+  92          >         FD_SET(fdSer,&readset);
+  93          >
+  94          >         if (select(fdCon+1,&readset,0,0,&timeout) == -1)
+  95          >             break;
+  96          >
+  97          >         if (FD_ISSET(fdCon,&readset)) {
+  98          >             if (c = read(fdCon,buf,sizeof(buf))) {
+  99          >                 static unsigned char prev = 0;
+ 100          >                 if (prev == 0x1d && buf[0] == 'q')
+ 101          >                     break;
+ 102          >                 prev = buf[0];
+ 103          >                 write(fdSer,buf,c);
+ 104          >             }
+ 105          >         }
+ 106          >         if (FD_ISSET(fdSer,&readset)) {
+ 107          >             if (c = read(fdSer,buf,sizeof(buf))) {
+ 108          >                 write(fdCon,buf,c);
+ 109          >             }
+ 110          >         }
+ 111          >     }
+ 112          >     tcsetattr(fdCon,TCSANOW,&tOrg);
+ 113          >     return 0;
+ 114          > }
+ 115          >
+ 116          > regards, mark hahn.
+ 117          > --
+ 118          > operator may differ from spokesperson.  hahn@neurocog.lrdc.pitt.edu
+ 119          >
+ 120            http://neurocog.lrdc.pitt.edu/~hahn/
+C51 COMPILER V3.40,  SERIAL                                                                12/06/98  13:30:01  PAGE 3   
+
+ 121          
+ 122          
+ 123          
+ 124          --------------CE68AB55E2DE5E554007DFBB
+ 125          Content-Type: message/rfc822
+ 126          Content-Transfer-Encoding: 7bit
+ 127          Content-Disposition: inline
+ 128          
+ 129          Path: news1.saix.net!uunet!in3.uu.net!207.172.25.142!ohno.news.erols.com!feed1.news.erols.com!howland.erol
+             -s.net!newsfeed.internetmci.com!in2.uu.net!136.142.185.26!newsfeed.pitt.edu!neurocog.lrdc.pitt.edu!hahn
+ 130          From: hahn@neurocog.lrdc.pitt.edu (Mark Hahn)
+ 131          Newsgroups: comp.unix.programmer,comp.os.linux.development.apps,comp.os.linux.development.system,comp.unix
+             -.questions,slo.unix
+ 132          Subject: Re: I need some solid 'C' routines to read from a serial port in 'LINUX'
+ 133          Followup-To: comp.unix.programmer,comp.os.linux.development.apps,comp.os.linux.development.system,comp.uni
+             -x.questions,slo.unix
+ 134          Date: 18 May 1997 03:36:42 GMT
+ 135          Organization: Learning Research and Development Center at U. of Pittsburgh
+ 136          Message-ID: <5lltga$p72@usenet.srv.cis.pitt.edu>
+ 137          References: <337D8287.3B42@earthlink.net> <EABxo0.H1z.B.stealth@bath.ac.uk>
+ 138          NNTP-Posting-Host: neurocog.lrdc.pitt.edu
+ 139          Xref: news1.saix.net comp.unix.programmer:56002 comp.os.linux.development.apps:32010 comp.os.linux.develop
+             -ment.system:45575 comp.unix.questions:123913 slo.unix:2382
+ 140          
+ 141          : >I need some 'c' routines that can read the serial port on a LINUX
+ 142          : >box.  It will be running either Slackware Linux 2.3 or Red Hat 4.1.
+ 143          : >Let me know the most common and most reliable methods.
+ 144          
+ 145          read/write is the only way to do IO on serial ports, and it's
+*** ERROR 305 IN LINE 145 OF SERIAL.C: unterminated string/char const
+ 146          completely reliable.  it can be layered under buffered stdio
+ 147          if you like, but that sometimes complicates things.
+ 148          
+ 149          : FILE *serial=fopen("/dev/ttya","r+");
+ 150          : getchar(serial);
+ 151          
+ 152          indeed.  here's a bit more useful example, a fully-functional program
+*** ERROR 305 IN LINE 152 OF SERIAL.C: unterminated string/char const
+ 153          I use to talk to my modem when I don't want to bother cranking up pppd:
+*** ERROR 305 IN LINE 153 OF SERIAL.C: unterminated string/char const
+ 154          
+ 155          #include <unistd.h>
+*** ERROR 318 IN LINE 155 OF SERIAL.C: can't open file 'unistd.h'
+*** ERROR 318 IN LINE 156 OF SERIAL.C: can't open file 'sys/time.h'
+*** ERROR 318 IN LINE 157 OF SERIAL.C: can't open file 'fcntl.h'
+ 158          #include <sys/time.h>
+ 158          #include <fcntl.h>
+ 158          #include <stdio.h>
+ 159          #include <termios.h>
+*** ERROR 318 IN LINE 159 OF SERIAL.C: can't open file 'termios.h'
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  11 ERROR(S)

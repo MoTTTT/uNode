@@ -1,0 +1,1 @@
+demo.obj,sio1.obj,n3inc.obj to demo.abs ramsize(256) NOOVERLAY PRINT (lnk.lst)

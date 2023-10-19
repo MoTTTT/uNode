@@ -1,0 +1,19 @@
+/************************************************************************/
+/*		INC.C : 552 include file				*/
+/*		M.J.Colley '92						*/
+/************************************************************************/
+#pragma		ROM (COMPACT)
+#pragma		SMALL
+#pragma		CODE
+#pragma		SYMBOLS
+#pragma		PAGELENGTH(64)
+#include	<stdio.h>
+#include	<intrins.h>
+#include	<reg552.h>
+
+/*#include	<sio.h>
+#include	<lcd.h>
+#include	<rtc.h>
+#include	<kpad.h>*/
+
+#include	<n3inc.c>

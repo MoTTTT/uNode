@@ -1,0 +1,174 @@
+Technical Refference Manual
+
+Power Supply:
+
+The 3-pin power connector  (J1) is configured as follows:
+>J1.1: 9V rail
+>J1.2: ANALOG GND (AGND )
+>J1.3: GND
+
+The 96-pin connector (P1) includes six power rails:
+>P1A.01: GND
+>P1A.02: ANALOG GND (AGND)
+>P1A.03: Vcc
+>P1A.04: GND
+>P1B.17: GND
+>P1B.18: 9V rail
+
+NOTES:
+*The 9V rail takes a minimum of 8V. To reduce power dissipation in the regulator, keep this voltage as low as possible.
+*If custom boards are fitted at P1, and rely on Vcc ( P1.A3 ) for power, the  regulator will need a heatsink. 
+*Unloaded, the board draws less than 200mA with a 11.059MHz Crystal. 
+*The regulator can source 1A, if adequately cooled.
+*If Vcc is being supplied to the unit at P1A.03 by an external supply, do not connect to the 9V rail.
+*To avoid ground loops, do not connect to GND of the unit at more than one pin.
+*In the absence of power to the unit, the on board battery keeps V+, the supply rail for the Real Time Clock and RAM, at 3.6V.
+
+The Real Time Clock (RTC)
+
+The real time clock ( Philips PCF8583 REF ....) communicates with the microcontroller using the I2C bus. It generates an alarm interrupt on INT1, multiplexed with the keypad decoder's interrupt. When servicing an interrupt that could have been caused by either device, the CONTROL/STATUS register of the RTC can be read and the alarm interrupt bit masked. ( test_alarm ( ) below, does this )
+Routines that make use of the RTC have been written in assembler, and can be linked into a high level language program. The following functions are available (using K.&R. C declaration style)
+
+bit	init_RTC( void );		/* 1 if RTC present	*/
+void	show_time( char position );	/* position: LDC cursor	*/
+void	show_date( char position );
+bit	alarm_RTC( void );	/*returns alarm status bit	*/
+void	set_time( void );		/*enter time at keypad	*/
+
+
+ROM
+
+The ROM contains the HOST code that runs during MODE 0 (TRANSFER). This code displays the logo " mNode ", and the time on the top line of the LCD display. 
+
+GUEST code, to be run during MODE 1 ( EMULATE ), can now be downloaded via the RS232 port ( J2 ). Once code has been recieved, the number of bytes recieved is reported on line 2 of the LCD display. 
+
+The following keys have functions:
+A: I2C slave bus test.
+B: Toggle Baud rate between 19.2 kBd and 9.6 kBd. 
+C: Change Time.
+ 
+
+LCD DISPLAY
+
+An assembler routine, putchar, is used in the library routines, and can be called as is in a C program. The declaration in C is:
+
+extern   char    putchar    ( char );
+
+The function of putchar is to print one character to the device selected by the variable io_stream ( defined as PUBLIC in the module PUTCHAR ):
+
+io_stream= 0 :  Output goes to LCD data ( screen )
+io_stream= 1 :  Output goes to LCD command register
+io_stream= 2 :  Output goes to RS232 port ( S0BUF )
+
+This function is required by the function printf ( ) found in most C compilers' run time library.
+To call this function from assembler, first set up io_stream, mov the character to be printed into R7, and then call putchar. Control will be returned to the calling routine once the byte has been transmitted or displayed. ( If io_stream = 0 or 1, the function waits for the "busy" bit in the LCD module's control register to clear.  In the case of io_stream = 2, the TI bit of the serial UART is polled until set, and then cleared. )
+
+R1 is the contrast control of the LCD display.
+
+The following functions are also available:
+
+void    set_lcd    ( char command );
+void    init_lcd    ( );
+
+The first funtion writes "command" to the COMMAND register of the LCD module. "Init_lcd" sets up the LCD into the following state:
+
+8 bit data; display ON; cursor OFF; auto increment cursor; freeze display; screen clear.
+
+96 PIN CONNECTOR P1
+
+A01:	GND	B01:	ALE	C01:	A15
+A02:	AGND	B02:	PSEN	C02:	A14
+A03:	VCC	B03:	S0	C03:	A13
+A04:	GND	B04:	S1	C04:	A12
+A05:	MODE	B05:	S2	C05:	A11
+A06:	NC	B06:	RD	C06:	A10
+A07:	NC	B07:	WR	C07:	A9
+A08:	NC	B08:	RST	C08:	A8
+A09:	NC	B09:	AD7	C09:	A7
+A10:	NC	B10:	AD6	C10:	A6
+A11:	NC	B11:	AD5	C11:	A5	
+A12:	NC	B12:	AD4	C12:	A4
+A13:	NC	B13:	AD3	C13:	A3
+A14:	NC	B14:	AD2	C14:	A2
+A15:	NC	B15:	AD1	C15:	A1
+A16:	NC	B16:	AD0	C16:	A0
+A17:	NC	B17:	GND	C17:	P1.7
+A18:	NC	B18:	9V	C18:	P1.6
+A19:	NC	B19:	STADC	C19:	P1.5
+A20:	NC	B20:	T1	C20:	P1.4
+A21:	NC	B21:	T0	C21:	P1.3
+A22:	NC	B22:	INT0	C22:	P1.2
+A23:	NC	B23:	PW1	C23:	P1.1
+A24:	NC	B24:	PW0	C24:	P1.0
+A25:	NC	B25:	ADC0	C25:	P4.7
+A26:	NC	B26:	ADC1	C26:	P4.6
+A27:	NC	B27:	ADC2	C27:	P4.5
+A28:	NC	B28:	ADC3	C28:	P4.4
+A29:	NC	B29:	ADC4	C29:	P4.3
+A30:	NC	B30:	ADC5	C30:	P4.2
+A31:	TX	B31:	ADC6	C31:	P4.1	
+A32:	RX	B32:	ADC7	C32:	P4.0
+
+NOTES
+Pins marked NC are reserved for future use.
+
+ADDRESS BUS
+
+The entire address bus is available at P1. The lower byte of the address bus is latched on the board for external use.
+See Memory Map.
+
+RS232 PORT
+
+The TX and RX pins as available at the microcontroller have been converted to RS232 levels. The RX and TX pins available on the connector P1 and J2 are thus at RS232 line level.
+
+The 'putchar' function ( See LCD DISPLAY ) can be used to send characters to this port.
+
+KEYPAD
+
+The 16 key keypad is located at 8000H in the memory map ( See Memory Map ). When a key is pressed, an interrupt is generated on XINT1 ( if enabled ). This interrupt is shared with the RTC ( See RTC ). The routine test_x1 ( ) can be used to determine the source of the interrupt.
+
+DIP-SWITCH S1, S2, S3
+
+S1 is used to switch between MODE 0 ( TRANSFER ), during which user CODE can be downloaded to the unit via RS232 link, and MODE 1 ( EMULATE ), in which the user CODE is run.
+
+S2 is used to select between two memory map options, MAP 0 and MAP 1. (See MEMORY MAP )
+
+S3 is used to enable or disable T3, the watchdog timer in the microcontroller. NOTE: The watchdog timer cannot be enabled/disabled from software.
+
+PHILIPS 80C552
+
+Most of the pins of the microcontroller are available at P1. ( See 96 PIN CONNECTOR P1 ) This is to enable the designer to develop with the full potential of the device available. Refer to the PHILIPS 8051 FAMILY MICROCONTROLLER MANUAL for details.
+
+RAM
+
+S2 is used to select the code size required by the programmer. 
+
+>MAP=0 ( S2 off ) provides the designer with space for 16K of CODE space, and 16K of onboard  RAM DATA space. 
+
+>MAP=1 provides 32K of CODE space and 0K on board RAM DATA space.
+
+MICROCONTROLLER CRYSTAL:
+
+The crystal used is 11.0592 MHz to accomodate the generation of preffered baud rates.
+
+MEMORY MAP
+
+There are TWO possible memory maps. The designer selects the memory map implimented by setting DIP SWITCH S2 ( MAP ). This determines how the RAM is used.
+
+   ADDRESS HIGH	    MAP=0	  MAP=1
+	0x00:	
+16K			ROM(CODE)	ROM(CODE)
+	0x40:				
+16K			RAM(DATA)	ROM(CODE)	
+	0x80:
+0.5K			               KEYPAD
+	0x82:
+0.5K			          LCD DISPLAY
+	0x84:	
+0.5K			           USER SEL S0
+	0x86:	
+14.5K			           USER SEL S1
+	0xB0:	
+16K			           USER SEL S2
+	0xFF:
+
